@@ -4,13 +4,13 @@ from pathlib import Path
 
 compiled_regex = re.compile(r"(\d{8}|\d{6}|\d{4}-\d{2}-\d{2})")
 
-def transform_filename(d):
-    path = Path(d)
-    path.resolve()
-    # print(path.absolute())
+def sanity(d: Path):
+    return not ("..." in d.name)
+
+def transform_filename(path: Path):
     d = path.name
 
-    if "..." in d:
+    if not sanity(path):
         return path.resolve().absolute()
 
     match = compiled_regex.search(d)
@@ -41,5 +41,22 @@ def transform_filename(d):
 
     return (path.parent.resolve().absolute() / f"{date}...{d}").absolute()
 
-print(f'{transform_filename(argv[1])}')
+def exif_transform(path: Path):
+    new_d = transform_filename(path)
+    if new_d.name != path.name:
+        return new_d
+    
+    # do exif magic here
+    return path
+
+def init(d):
+    path = Path(d)
+    path.resolve()
+
+    if not sanity(path):
+        return d
+    
+    return exif_transform(path)
+
+print(f'{init(argv[1])}')
 
